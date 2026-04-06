@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+models/*
+!models/.gitkeep
+uploads/*
+!uploads/.gitkeep
+outputs/*
+!outputs/.gitkeep
