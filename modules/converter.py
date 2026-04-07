@@ -1,18 +1,29 @@
+import os
+import shutil
+
 try:
-    from rvc_python.infer import RVCInference
+    from infer_rvc_python.main import BaseLoader
 except ImportError:
-    RVCInference = None
+    BaseLoader = None
 
 
 class VoiceConverter:
-    """Wraps RVC v2 inference for singing voice conversion."""
+    """Wraps infer_rvc_python BaseLoader for singing voice conversion."""
 
     def __init__(self, device: str = "cuda:0"):
-        self._rvc = RVCInference(device=device)
+        only_cpu = device == "cpu"
+        self._loader = BaseLoader(only_cpu=only_cpu)
+        self._tag = "model"
 
     def load_model(self, model_path: str, index_path: str) -> None:
         """Load a trained RVC model and its feature index."""
-        self._rvc.load_model(model_path, index_path)
+        self._model_path = model_path
+        self._index_path = index_path
+        self._loader.apply_conf(
+            tag=self._tag,
+            file_model=model_path,
+            file_index=index_path,
+        )
 
     def convert(
         self,
@@ -41,15 +52,27 @@ class VoiceConverter:
         Returns:
             output_path
         """
-        self._rvc.infer_file(
-            input=input_path,
-            output=output_path,
-            f0_up_key=f0_up_key,
-            f0_method=f0_method,
-            index_rate=index_rate,
-            protect=protect,
-            rms_mix_rate=rms_mix_rate,
-            filter_radius=filter_radius,
-            resample_sr=0,
+        self._loader.apply_conf(
+            tag=self._tag,
+            file_model=self._model_path,
+            file_index=self._index_path,
+            pitch_algo=f0_method,
+            pitch_lvl=f0_up_key,
+            index_influence=index_rate,
+            consonant_breath_protection=protect,
+            envelope_ratio=rms_mix_rate,
+            respiration_median_filtering=filter_radius,
         )
+
+        self._loader(
+            audio_files=[input_path],
+            tag_list=[self._tag],
+            type_output="wav",
+        )
+
+        # infer_rvc_python writes to {dirname}/{stem}_edited.wav
+        auto_output = self._loader.output_list[0]
+        if auto_output != output_path:
+            shutil.move(auto_output, output_path)
+
         return output_path

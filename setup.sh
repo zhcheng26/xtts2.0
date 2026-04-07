@@ -19,8 +19,8 @@ pip install -r requirements.txt
 
 echo "=== Pre-downloading RVC pretrained models ==="
 python -c "
-from rvc_python.infer import RVCInference
-rvc = RVCInference(device='cpu')
+from infer_rvc_python.main import BaseLoader
+loader = BaseLoader(only_cpu=True)
 print('RVC models ready.')
 "
 
