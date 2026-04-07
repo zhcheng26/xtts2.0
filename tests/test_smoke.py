@@ -6,18 +6,17 @@ import inspect
 import sys
 from unittest.mock import MagicMock
 
-# Mock demucs BEFORE importing separator (which imports demucs at top level)
+# Mock demucs.api if not available (before importing separator).
+# Do NOT clean it up—other tests may depend on this mock persisting.
 try:
     import demucs.api
 except ImportError:
-    sys.modules["demucs"] = MagicMock()
     sys.modules["demucs.api"] = MagicMock()
 
 from modules.separator import separate_vocals
 from modules.mixer import mix_audio
 from modules.converter import VoiceConverter
 from train import train
-from infer import infer
 
 
 def test_separate_vocals_signature():
@@ -56,6 +55,7 @@ def test_train_signature():
 
 
 def test_infer_signature():
+    from infer import infer
     params = list(inspect.signature(infer).parameters)
     assert "song_path" in params
     assert "model_path" in params
@@ -68,6 +68,7 @@ def test_infer_signature():
 
 def test_infer_documents_return_keys():
     """infer() docstring must document the three output dict keys."""
+    from infer import infer
     doc = infer.__doc__
     assert "vocals_original" in doc
     assert "vocals_converted" in doc

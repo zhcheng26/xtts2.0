@@ -59,16 +59,22 @@ def test_infer_returns_output_paths(tmp_path):
 
     try:
         with patch("modules.separator.separate_vocals") as mock_sep, \
+             patch("infer.separate_vocals") as mock_sep_infer, \
              patch("modules.converter.VoiceConverter") as mock_vc_cls, \
-             patch("modules.mixer.mix_audio") as mock_mix:
+             patch("infer.VoiceConverter") as mock_vc_infer, \
+             patch("modules.mixer.mix_audio") as mock_mix, \
+             patch("infer.mix_audio") as mock_mix_infer:
 
             mock_sep.return_value = (vocals_wav, acc_wav)
+            mock_sep_infer.return_value = (vocals_wav, acc_wav)
 
             mock_vc = MagicMock()
             mock_vc_cls.return_value = mock_vc
+            mock_vc_infer.return_value = mock_vc
             mock_vc.convert.return_value = converted_wav
 
             mock_mix.return_value = final_wav
+            mock_mix_infer.return_value = final_wav
 
             from infer import infer
             result = infer(
